@@ -1,0 +1,190 @@
+﻿@using EventEase.Models
+
+<div class="attendance-tracker">
+    <h5>Attendance Tracking</h5>
+    
+    <div class="attendance-stats">
+        <div class="stat-card">
+            <div class="stat-number">@Event.CurrentAttendees</div>
+            <div class="stat-label">Current Attendees</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">@Event.MaxAttendees</div>
+            <div class="stat-label">Max Capacity</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">@GetAvailableSpots()</div>
+            <div class="stat-label">Available Spots</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">@GetAttendancePercentage()%</div>
+            <div class="stat-label">Capacity Used</div>
+        </div>
+    </div>
+    
+    <div class="attendance-visual">
+        <div class="capacity-bar">
+            <div class="filled-capacity" style="width: @GetAttendancePercentage()%"></div>
+        </div>
+        <div class="capacity-labels">
+            <span>0</span>
+            <span>@Event.MaxAttendees</span>
+        </div>
+    </div>
+    
+    @if (Event.RegisteredUsers.Any())
+    {
+        <div class="registered-users">
+            <h6>Registered Attendees</h6>
+            <div class="users-list">
+                @foreach (var user in Event.RegisteredUsers.Take(10))
+                {
+                    <div class="user-badge">
+                        <i class="fas fa-user"></i>
+                        @user
+                    </div>
+                }
+                @if (Event.RegisteredUsers.Count > 10)
+                {
+                    <div class="user-badge more-users">
+                        +@(Event.RegisteredUsers.Count - 10) more
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    
+    <div class="quick-actions">
+        <button class="btn btn-sm btn-success" @onclick="AddAttendee" disabled="@(Event.CurrentAttendees >= Event.MaxAttendees)">
+            <i class="fas fa-plus"></i> Add Attendee
+        </button>
+        <button class="btn btn-sm btn-warning" @onclick="RemoveAttendee" disabled="@(Event.CurrentAttendees <= 0)">
+            <i class="fas fa-minus"></i> Remove Attendee
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventModel Event { get; set; } = new();
+    [Parameter] public EventCallback<EventModel> EventChanged { get; set; }
+    
+    private int GetAvailableSpots()
+    {
+        return Math.Max(0, Event.MaxAttendees - Event.CurrentAttendees);
+    }
+    
+    private double GetAttendancePercentage()
+    {
+        if (Event.MaxAttendees == 0) return 0;
+        return Math.Round((double)Event.CurrentAttendees / Event.MaxAttendees * 100, 1);
+    }
+    
+    private async Task AddAttendee()
+    {
+        if (Event.CurrentAttendees < Event.MaxAttendees)
+        {
+            Event.CurrentAttendees++;
+            Event.RegisteredUsers.Add($"Walk-in {DateTime.Now:HHmm}");
+            await EventChanged.InvokeAsync(Event);
+        }
+    }
+    
+    private async Task RemoveAttendee()
+    {
+        if (Event.CurrentAttendees > 0)
+        {
+            Event.CurrentAttendees--;
+            if (Event.RegisteredUsers.Any())
+            {
+                Event.RegisteredUsers.RemoveAt(Event.RegisteredUsers.Count - 1);
+            }
+            await EventChanged.InvokeAsync(Event);
+        }
+    }
+}
+
+<style>
+    .attendance-tracker {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .attendance-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .capacity-bar {
+        height: 20px;
+        background: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 5px;
+    }
+    
+    .filled-capacity {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+        transition: width 0.3s ease;
+    }
+    
+    .capacity-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .users-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    
+    .user-badge {
+        background: #e7f3ff;
+        color: #0066cc;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .more-users {
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .quick-actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+    }
+</style>

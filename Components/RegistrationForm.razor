@@ -1,0 +1,94 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using EventEase.Models
+
+<div class="registration-form">
+    <h4>Event Registration</h4>
+    
+    <EditForm Model="registrationModel" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+        
+        <div class="form-group">
+            <label for="firstName">First Name:</label>
+            <InputText id="firstName" @bind-Value="registrationModel.FirstName" class="form-control" />
+            <ValidationMessage For="@(() => registrationModel.FirstName)" />
+        </div>
+        
+        <div class="form-group">
+            <label for="lastName">Last Name:</label>
+            <InputText id="lastName" @bind-Value="registrationModel.LastName" class="form-control" />
+            <ValidationMessage For="@(() => registrationModel.LastName)" />
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <InputText id="email" type="email" @bind-Value="registrationModel.Email" class="form-control" />
+            <ValidationMessage For="@(() => registrationModel.Email)" />
+        </div>
+        
+        <div class="form-group">
+            <label for="phone">Phone Number:</label>
+            <InputText id="phone" @bind-Value="registrationModel.PhoneNumber" class="form-control" />
+            <ValidationMessage For="@(() => registrationModel.PhoneNumber)" />
+        </div>
+        
+        <div class="form-group">
+            <label for="dietaryRestrictions">Dietary Restrictions:</label>
+            <InputTextArea id="dietaryRestrictions" @bind-Value="registrationModel.DietaryRestrictions" class="form-control" rows="3" />
+        </div>
+        
+        <div class="form-check">
+            <InputCheckbox id="agreeTerms" @bind-Value="registrationModel.AgreeToTerms" class="form-check-input" />
+            <label class="form-check-label" for="agreeTerms">
+                I agree to the terms and conditions
+            </label>
+            <ValidationMessage For="@(() => registrationModel.AgreeToTerms)" />
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" disabled="@(!context.IsModified() || !context.IsValid())">
+                Register for Event
+            </button>
+            <button type="button" class="btn btn-secondary" @onclick="ClearForm">
+                Clear Form
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public EventModel Event { get; set; } = new();
+    [Parameter] public EventCallback<RegistrationModel> OnRegistrationSubmitted { get; set; }
+    
+    private RegistrationModel registrationModel = new();
+    
+    private async Task HandleValidSubmit()
+    {
+        await OnRegistrationSubmitted.InvokeAsync(registrationModel);
+        registrationModel = new(); // Reset form
+    }
+    
+    private void ClearForm()
+    {
+        registrationModel = new();
+    }
+}
+
+<style>
+    .registration-form {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+</style>

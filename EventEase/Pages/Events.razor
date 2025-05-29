@@ -1,0 +1,100 @@
+﻿@page "/events"
+@page "/events/{EventId:int}"
+@using EventEase.Models
+@using EventEase.Services
+@inject EventService EventService
+@inject NavigationManager Navigation
+
+<PageTitle>Events - EventEase</PageTitle>
+
+<div class="events-container">
+    <div class="page-header">
+        <h1>Event Management</h1>
+        <button class="btn btn-primary" @onclick="CreateNewEvent">
+            <i class="fas fa-plus"></i> Create New Event
+        </button>
+    </div>
+    
+    @if (EventId.HasValue)
+    {
+        <div class="event-detail-view">
+            <button class="btn btn-secondary mb-3" @onclick="BackToEventsList">
+                <i class="fas fa-arrow-left"></i> Back to Events
+            </button>
+            
+            @if (SelectedEvent != null)
+            {
+                <EventCard Event="SelectedEvent" EventChanged="OnEventChanged" />
+                <AttendanceTracker Event="SelectedEvent" />
+            }
+            else
+            {
+                <div class="alert alert-warning">Event not found.</div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="events-grid">
+            @if (events.Any())
+            {
+                @foreach (var eventItem in events)
+                {
+                    <div class="event-card-wrapper" @onclick="() => ViewEventDetail(eventItem.Id)">
+                        <EventCard Event="eventItem" EventChanged="OnEventChanged" />
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="no-events">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Events Yet</h3>
+                    <p>Create your first event to get started!</p>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int? EventId { get; set; }
+    
+    private List<EventModel> events = new();
+    private EventModel? SelectedEvent;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        events = await EventService.GetEventsAsync();
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EventId.HasValue)
+        {
+            SelectedEvent = await EventService.GetEventByIdAsync(EventId.Value);
+        }
+    }
+    
+    private async Task OnEventChanged(EventModel updatedEvent)
+    {
+        await EventService.UpdateEventAsync(updatedEvent);
+        events = await EventService.GetEventsAsync();
+        StateHasChanged();
+    }
+    
+    private void CreateNewEvent()
+    {
+        Navigation.NavigateTo("/events/new");
+    }
+    
+    private void ViewEventDetail(int eventId)
+    {
+        Navigation.NavigateTo($"/events/{eventId}");
+    }
+    
+    private void BackToEventsList()
+    {
+        Navigation.NavigateTo("/events");
+    }
+}

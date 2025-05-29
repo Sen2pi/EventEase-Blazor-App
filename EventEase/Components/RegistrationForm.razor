@@ -46,7 +46,7 @@
         </div>
         
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary" disabled="@(!context.IsModified() || !context.IsValid())">
+            <button type="submit" class="btn btn-primary" disabled="@(!context.IsValid())">
                 Register for Event
             </button>
             <button type="button" class="btn btn-secondary" @onclick="ClearForm">
